@@ -35,18 +35,21 @@ public class ViewDocActivity extends AppCompatActivity {
         displayView = findViewById(R.id.display_textView);
         backButton = findViewById(R.id.back_button);
 
-        Realm.init(this);
-
+        /*Realm.init(this);
         String appID = "patientidcollapp-wapwe";
         String _partiton = "ids";
         app = new App(new AppConfiguration.Builder(appID).build());
+         */
+
+        app = RealmSingleton.getInstance().getRealm();
+        String _partiton = "ids";
 
         Credentials credentials = Credentials.anonymous();
         app.loginAsync(credentials,it -> {
 
             if (it.isSuccess()) {
                 Log.w("MongoDB Auth", "Success");
-                user = app.currentUser();
+                user = RealmSingleton.getInstance().getRealm().currentUser();
                 try {
                     SyncConfiguration config = new SyncConfiguration.Builder(user, _partiton)
                             .allowQueriesOnUiThread(true)
@@ -98,17 +101,9 @@ public class ViewDocActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        user.logOutAsync( result -> {
-            if (result.isSuccess()) {
-                Log.w("MongoDB Realm App Client", "Successfully logged out.");
-            } else {
-                Log.e("MongoDB Realm App Client", "Failed to log out. Error: " + result.getError().toString());
-            }
-        });
-    }
+
+
+
 
     @Override
     public void onDestroy(){
@@ -123,6 +118,7 @@ public class ViewDocActivity extends AppCompatActivity {
         });
 
     }
+
 
     @Override
     public void onBackPressed() {}

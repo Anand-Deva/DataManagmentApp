@@ -34,11 +34,13 @@ public class InsertDocActivity extends AppCompatActivity {
         idEditText = findViewById(R.id.id_editText);
         insertButton = findViewById(R.id.insert_button);
 
-        Realm.init(this);
-
+        /*Realm.init(this);
         String appID = "patientidcollapp-wapwe";
-        String _partiton = "ids";
         app = new App(new AppConfiguration.Builder(appID).build());
+         */
+
+        app = RealmSingleton.getInstance().getRealm();
+        String _partiton = "ids";
 
         insertButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -49,7 +51,7 @@ public class InsertDocActivity extends AppCompatActivity {
 
                     if (it.isSuccess()) {
                         Log.w("MongoDB Auth", "Success");
-                        user = app.currentUser();
+                        user =  RealmSingleton.getInstance().getRealm().currentUser();
                         SyncConfiguration config = new SyncConfiguration.Builder(user,_partiton)
                                 .allowQueriesOnUiThread(true)
                                 .allowWritesOnUiThread(true)
@@ -82,6 +84,7 @@ public class InsertDocActivity extends AppCompatActivity {
 
     }
 
+
     @Override
     public void onDestroy(){
         super.onDestroy();
@@ -93,6 +96,7 @@ public class InsertDocActivity extends AppCompatActivity {
             }
         });
     }
+
 
     @Override
     public void onBackPressed() {}
