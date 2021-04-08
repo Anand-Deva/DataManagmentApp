@@ -13,20 +13,28 @@ public class DashboardActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
-        Button insertDocButton = findViewById(R.id.insertDoc_button);
-        Button viewDocButton = findViewById(R.id.viewDoc_button);
+        Button IdentityButton = findViewById(R.id.identity_button);
+        Button BioInfoButton = findViewById(R.id.bioinfo_button);
+        Button BodyMeasurmentButton = findViewById(R.id.bodyMeasurments_button);
 
-        insertDocButton.setOnClickListener(new View.OnClickListener() {
+        IdentityButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent intent1 = new Intent(getApplicationContext(), InsertDocActivity.class);
+                Intent intent1 = new Intent(getApplicationContext(), IdentityActivity.class);
                 startActivity(intent1);
             }
         });
 
-        viewDocButton.setOnClickListener(new View.OnClickListener() {
+        BioInfoButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent intent2 = new Intent(getApplicationContext(), ViewDocActivity.class);
-                startActivity(intent2);
+                Intent intent1 = new Intent(getApplicationContext(), BioInfoActivity.class);
+                startActivity(intent1);
+            }
+        });
+
+        BodyMeasurmentButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent1 = new Intent(getApplicationContext(), BodyMeasurmentActivity.class);
+                startActivity(intent1);
             }
         });
     }

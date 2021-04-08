@@ -5,7 +5,7 @@ import io.realm.mongodb.AppConfiguration;
 
 public class RealmSingleton {
     private static RealmSingleton instance = null;
-    private static String appID = "patientidcollapp-wapwe";
+    private static String appID = "ad_testapp_01-uhjhn";
     private App realm;
 
     public static RealmSingleton getInstance() {

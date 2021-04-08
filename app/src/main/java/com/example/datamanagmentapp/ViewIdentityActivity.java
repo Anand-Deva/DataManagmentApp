@@ -13,15 +13,13 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import io.realm.Realm;
-import io.realm.RealmAsyncTask;
 import io.realm.RealmResults;
 import io.realm.mongodb.App;
-import io.realm.mongodb.AppConfiguration;
 import io.realm.mongodb.Credentials;
 import io.realm.mongodb.User;
 import io.realm.mongodb.sync.SyncConfiguration;
 
-public class ViewDocActivity extends AppCompatActivity {
+public class ViewIdentityActivity extends AppCompatActivity {
     App app;
     User user;
     TextView displayView;
@@ -30,7 +28,7 @@ public class ViewDocActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_view_doc);
+        setContentView(R.layout.activity_view_identity);
 
         displayView = findViewById(R.id.display_textView);
         backButton = findViewById(R.id.back_button);

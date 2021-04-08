@@ -13,15 +13,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.bson.types.ObjectId;
 
 import io.realm.Realm;
-import io.realm.RealmAsyncTask;
-import io.realm.RealmConfiguration;
 import io.realm.mongodb.App;
-import io.realm.mongodb.AppConfiguration;
 import io.realm.mongodb.Credentials;
 import io.realm.mongodb.User;
 import io.realm.mongodb.sync.SyncConfiguration;
 
-public class InsertDocActivity extends AppCompatActivity {
+public class InsertIdentityActivity extends AppCompatActivity {
     App app;
     User user;
     EditText idEditText;
@@ -30,17 +27,17 @@ public class InsertDocActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_insert_doc);
+        setContentView(R.layout.activity_insert_identity);
         idEditText = findViewById(R.id.id_editText);
         insertButton = findViewById(R.id.insert_button);
+
+        app = RealmSingleton.getInstance().getRealm();
+        String _partiton = "ids";
 
         /*Realm.init(this);
         String appID = "patientidcollapp-wapwe";
         app = new App(new AppConfiguration.Builder(appID).build());
          */
-
-        app = RealmSingleton.getInstance().getRealm();
-        String _partiton = "ids";
 
         insertButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -65,6 +62,7 @@ public class InsertDocActivity extends AppCompatActivity {
                                     PatientIdCollection pId = r.createObject(PatientIdCollection.class, new ObjectId());
                                     // Configure the instance.
                                     pId.setuId(insertedID);
+                                    pId.set_partitionKey(_partiton);
 
                                     Log.w("MongoDB", "Document inserted successfully");
                                 });

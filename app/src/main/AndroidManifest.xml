@@ -9,8 +9,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DataManagmentApp">
-        <activity android:name=".ViewDocActivity"></activity>
-        <activity android:name=".InsertDocActivity" />
+        <activity android:name=".ViewBodyMeasurementActivity"></activity>
+        <activity android:name=".InsertBodyMeasurementActivity" />
+        <activity android:name=".BodyMeasurmentActivity" />
+        <activity android:name=".ViewBioActivity" />
+        <activity android:name=".InsertBioActivity" />
+        <activity android:name=".BioInfoActivity" />
+        <activity android:name=".IdentityActivity" />
+        <activity android:name=".ViewIdentityActivity" />
+        <activity android:name=".InsertIdentityActivity" />
         <activity android:name=".DashboardActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
