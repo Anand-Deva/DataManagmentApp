@@ -19,30 +19,27 @@ import io.realm.mongodb.User;
 import io.realm.mongodb.sync.SyncConfiguration;
 
 public class InsertIdentityActivity extends AppCompatActivity {
-    App app;
-    User user;
-    EditText idEditText;
-    Button insertButton;
+    Realm realm;
+    ConnectMongoRealm cmr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_insert_identity);
-        idEditText = findViewById(R.id.id_editText);
-        insertButton = findViewById(R.id.insert_button);
+        EditText idEditText = findViewById(R.id.id_editText);
+        Button insertButton = findViewById(R.id.insert_button);
 
-        app = RealmSingleton.getInstance().getRealm();
-        String _partiton = "ids";
+        cmr = new ConnectMongoRealm();
+        User user = RealmSingleton.getInstance().getRealm().currentUser();
+        String _partition = "ids";
 
-        /*Realm.init(this);
-        String appID = "patientidcollapp-wapwe";
-        app = new App(new AppConfiguration.Builder(appID).build());
-         */
 
         insertButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String insertedID = idEditText.getText().toString();
 
+                /*
+                app = RealmSingleton.getInstance().getRealm();
                 Credentials credentials = Credentials.anonymous();
                 app.loginAsync(credentials,it -> {
 
@@ -77,6 +74,27 @@ public class InsertIdentityActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(),"Error while connecting with Realm",Toast.LENGTH_LONG).show();
                     }
                 });
+
+ */
+
+                if(user != null){
+                    realm = cmr.establishRealm(user, _partition);
+                    realm.executeTransaction(transactionRealm -> {
+                        Log.v("MongoDB Realm", "Successfully opened a realm");
+                        // Instantiate the class using the factory function.
+                        PatientIdCollection pId = transactionRealm.createObject(PatientIdCollection.class, new ObjectId());
+                        // Configure the instance.
+                        pId.setuId(insertedID);
+                        pId.set_partitionKey(_partition);
+                        Log.w("MongoDB", "Document inserted successfully");
+                    });
+                    idEditText.setText("");
+                    Intent intent1 = new Intent(getApplicationContext(), DashboardActivity.class);
+                    startActivity(intent1);
+                } else {
+                    Intent intent1 = new Intent(getApplicationContext(), MainActivity.class);
+                    startActivity(intent1);
+                }
             }
         });
 
@@ -86,13 +104,7 @@ public class InsertIdentityActivity extends AppCompatActivity {
     @Override
     public void onDestroy(){
         super.onDestroy();
-        user.logOutAsync( result -> {
-            if (result.isSuccess()) {
-                Log.w("MongoDB Realm App Client", "Successfully logged out.");
-            } else {
-                Log.e("MongoDB Realm App Client", "Failed to log out. Error: " + result.getError().toString());
-            }
-        });
+        cmr.closeRealm();
     }
 
 

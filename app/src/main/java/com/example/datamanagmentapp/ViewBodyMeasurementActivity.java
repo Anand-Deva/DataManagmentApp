@@ -2,6 +2,7 @@ package com.example.datamanagmentapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -31,9 +32,10 @@ import io.realm.mongodb.sync.SyncConfiguration;
 
 public class ViewBodyMeasurementActivity extends AppCompatActivity {
     ListView listView;
-    App app;
-    User user;
-    RealmResults<BodyMeasurement> queryResults;
+
+    Realm realm;
+    ConnectMongoRealm cmr;
+    ArrayList<BodyMeasurement> queryResultsArrayList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +49,12 @@ public class ViewBodyMeasurementActivity extends AppCompatActivity {
         Button getDateButton = findViewById(R.id.get_date_Button);
         listView = findViewById(R.id.listView);
 
-        app = RealmSingleton.getInstance().getRealm();
-        String _partiton =  "Body Measurement";
 
+        cmr = new ConnectMongoRealm();
+        User user = RealmSingleton.getInstance().getRealm().currentUser();
+        String _partition =  "Body Measurement";
+/*
+        app = RealmSingleton.getInstance().getRealm();
         Credentials credentials = Credentials.anonymous();
         app.loginAsync(credentials, it -> {
 
@@ -79,62 +84,52 @@ public class ViewBodyMeasurementActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Error while connecting with Realm", Toast.LENGTH_LONG).show();
             }
         });
+ */
+        if(user != null){
+            realm = cmr.establishRealm(user, _partition);
+            realm.executeTransaction(transactionRealm -> {
+                Log.v("MongoDB Realm", "Successfully opened a realm");
+                RealmQuery<BodyMeasurement> tasksQuery = transactionRealm.where(BodyMeasurement.class);
+                queryResultsArrayList = new ArrayList<>(tasksQuery.findAll());
+            });
+        } else{
+            Intent intent = new Intent(this,MainActivity.class);
+            startActivity(intent);
+        }
 
 
         getDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ArrayList<CustomBodyMeasurementModel> arrayList = new ArrayList<>();
+                ArrayList<BodyMeasurement> resultArrayList = new ArrayList<>();
                 listView.setAdapter(null);
                 CustomAdapter customAdapter;
-                //Date searchDatePattern = null, queryDatePattern = null;
+
                 String searchDate = datePicker.getYear() +"-"+ (datePicker.getMonth() + 1) +"-"+ datePicker.getDayOfMonth() + " 00:00:00" ;
 
-                /*
-                try {
-                    searchDatePattern =  sdf.parse(searchDate);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                 */
-
-/*
-                JSONArray arrayJson = null;
-                try {
-                    arrayJson = new JSONArray(queryResults.asJSON());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                for(int i=0; i < arrayJson.length();i++){
-                }
-*/
-
-                for (int i = 0; i < queryResults.size(); i++) {
-                    String queryDate = queryResults.get(i).getTimestamp();
-                    Log.d("MongoDB query result(i)", queryResults.get(i).toString());
-
-                    /*
-                    try {
-                        queryDatePattern = sdf.parse(queryDate);
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-
-                     */
+                for (int i = 0; i < queryResultsArrayList.size(); i++) {
+                    String queryDate = queryResultsArrayList.get(i).getTimestamp();
+                    Log.d("MongoDB query result(i)", queryResultsArrayList.get(i).toString());
 
                     try {
                         if(sdf.parse(queryDate).after(sdf.parse(searchDate))){
-                            //Log.d("after if condition",queryDatePattern.toString());
-                            arrayList.add(new CustomBodyMeasurementModel(queryResults.get(i).getGewicht_Kg(), queryResults.get(i).getGröße_cm(),queryResults.get(i).getTimestamp()));
-                        }
+                            resultArrayList.add(queryResultsArrayList.get(i));
+                            }
                     } catch (ParseException e) {
                         e.printStackTrace();
                     }
                 }
-                Log.d("arrayList of values",arrayList.toString());
-                customAdapter = new CustomAdapter(getApplicationContext(),arrayList);
+                Log.d("arrayList of values",resultArrayList.toString());
+                customAdapter = new CustomAdapter(getApplicationContext(),resultArrayList);
                 listView.setAdapter(customAdapter);
             }
         });
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        cmr.closeRealm();
+
     }
 }

@@ -14,32 +14,39 @@ import android.widget.Toast;
 
 import org.bson.types.ObjectId;
 
+import java.util.ArrayList;
+
 import io.realm.Realm;
+import io.realm.RealmQuery;
+import io.realm.log.RealmLog;
 import io.realm.mongodb.App;
 import io.realm.mongodb.Credentials;
 import io.realm.mongodb.User;
 import io.realm.mongodb.sync.SyncConfiguration;
 
 public class InsertBioActivity extends AppCompatActivity {
-    App app;
-    User user;
+
+    Realm realm;
+    ConnectMongoRealm cmr;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_insert_bio);
 
-        app = RealmSingleton.getInstance().getRealm();
-        String _partiton = "Bio";
-
+        EditText nameEditTest = findViewById(R.id.editText_Name);
+        EditText ageEditText = findViewById(R.id.editText_age);
+        Button submitBioButton = findViewById(R.id.Submit_bio_button);
         Spinner selectGender = findViewById(R.id.Select_Gender);
         ArrayAdapter<String> myadapter=new ArrayAdapter<String>(InsertBioActivity.this,android.R.layout.simple_list_item_1,getResources().getStringArray(R.array.itemselect));
         myadapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         selectGender.setAdapter(myadapter);
 
-        EditText nameEditTest = findViewById(R.id.editText_Name);
-        EditText ageEditText = findViewById(R.id.editText_age);
 
-        Button submitBioButton = findViewById(R.id.Submit_bio_button);
+
+        cmr = new ConnectMongoRealm();
+        String _partition = "Bio";
+        User user = RealmSingleton.getInstance().getRealm().currentUser();
 
 
         submitBioButton.setOnClickListener(new View.OnClickListener() {
@@ -49,6 +56,8 @@ public class InsertBioActivity extends AppCompatActivity {
                 String age = ageEditText.getText().toString();
                 String gender = selectGender.getSelectedItem().toString();
 
+                /*
+                app = RealmSingleton.getInstance().getRealm();
                 Credentials credentials = Credentials.anonymous();
                 app.loginAsync(credentials, it -> {
 
@@ -75,6 +84,8 @@ public class InsertBioActivity extends AppCompatActivity {
                                 });
                             }
                         });
+
+
                         nameEditTest.setText("");
                         ageEditText.setText("");
                         Intent intent1 = new Intent(getApplicationContext(), DashboardActivity.class);
@@ -84,7 +95,36 @@ public class InsertBioActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "Error while connecting with Realm", Toast.LENGTH_LONG).show();
                     }
                 });
+                */
+
+                if(user != null){
+                    realm = cmr.establishRealm(user, _partition);
+                    realm.executeTransaction(transactionRealm -> {
+                        Log.v("MongoDB Realm", "Successfully opened a realm");
+                        // Instantiate the class using the factory function.
+                        BioInfo bi = transactionRealm.createObject(BioInfo.class, new ObjectId());
+                        // Configure the instance.
+                        bi.setName(name);
+                        bi.setAge(age);
+                        bi.setGender(gender);
+                        bi.set_partitionKey(_partition);
+                        Log.w("MongoDB", "Document inserted successfully");
+                    });
+                    nameEditTest.setText("");
+                    ageEditText.setText("");
+                    Intent intent1 = new Intent(getApplicationContext(), DashboardActivity.class);
+                    startActivity(intent1);
+                } else {
+                    Intent intent1 = new Intent(getApplicationContext(), MainActivity.class);
+                    startActivity(intent1);
+                }
             }
         });
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        cmr.closeRealm();
     }
 }

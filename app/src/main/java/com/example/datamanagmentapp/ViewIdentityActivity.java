@@ -13,6 +13,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import io.realm.Realm;
+import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.mongodb.App;
 import io.realm.mongodb.Credentials;
@@ -20,10 +21,12 @@ import io.realm.mongodb.User;
 import io.realm.mongodb.sync.SyncConfiguration;
 
 public class ViewIdentityActivity extends AppCompatActivity {
-    App app;
-    User user;
+
     TextView displayView;
     Button backButton;
+
+    ConnectMongoRealm cmr;
+    Realm realm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,15 +36,12 @@ public class ViewIdentityActivity extends AppCompatActivity {
         displayView = findViewById(R.id.display_textView);
         backButton = findViewById(R.id.back_button);
 
-        /*Realm.init(this);
-        String appID = "patientidcollapp-wapwe";
-        String _partiton = "ids";
-        app = new App(new AppConfiguration.Builder(appID).build());
-         */
+        cmr = new ConnectMongoRealm();
+        String _partition = "ids";
+        User user = RealmSingleton.getInstance().getRealm().currentUser();
 
+        /*
         app = RealmSingleton.getInstance().getRealm();
-        String _partiton = "ids";
-
         Credentials credentials = Credentials.anonymous();
         app.loginAsync(credentials,it -> {
 
@@ -81,14 +81,33 @@ public class ViewIdentityActivity extends AppCompatActivity {
                 }catch (Exception e){
                     Log.e("Exception", e.toString());
                 }
-
-
             } else {
                 Log.e("MongoDB Auth", it.getError().toString());
                 Toast.makeText(getApplicationContext(),"Error while connecting with Realm",Toast.LENGTH_LONG).show();
             }
         });
+        */
 
+        if(user != null){
+            realm = cmr.establishRealm(user, _partition);
+            realm.executeTransaction(transactionRealm -> {
+                Log.v("MongoDB Realm", "Successfully opened a realm");
+                RealmQuery<PatientIdCollection> tasksQuery = transactionRealm.where(PatientIdCollection.class);
+                ArrayList<PatientIdCollection> queryResultsArrayList = new ArrayList<>(tasksQuery.findAll());
+                ArrayList<String> idArrayList = new ArrayList<String>();
+                for (int i = 0; i < queryResultsArrayList.size(); i++) {
+                    idArrayList.add(queryResultsArrayList.get(i).getuId());
+                }
+                String listString = "";
+                for (String s : idArrayList) {
+                    listString += s + " ";
+                }
+                displayView.setText(listString);
+            });
+        } else{
+            Intent intent = new Intent(this,MainActivity.class);
+            startActivity(intent);
+        }
 
 
         backButton.setOnClickListener(new View.OnClickListener() {
@@ -100,20 +119,10 @@ public class ViewIdentityActivity extends AppCompatActivity {
     }
 
 
-
-
-
     @Override
     public void onDestroy(){
         super.onDestroy();
-
-        user.logOutAsync( result -> {
-            if (result.isSuccess()) {
-                Log.w("MongoDB Realm App Client", "Successfully logged out.");
-            } else {
-                Log.e("MongoDB Realm App Client", "Failed to log out. Error: " + result.getError().toString());
-            }
-        });
+        cmr.closeRealm();
 
     }
 

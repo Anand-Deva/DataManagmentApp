@@ -24,16 +24,16 @@ import io.realm.mongodb.sync.SyncConfiguration;
 public class ViewBioActivity extends AppCompatActivity {
 
     TextView nameTextView, ageTextView, genderTextView;
-    App app;
-    User user;
-    RealmResults<BioInfo> queryResults;
+
+    Realm realm;
+    ConnectMongoRealm cmr;
+    ArrayList<BioInfo> queryResultsArrayList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_bio);
-        app = RealmSingleton.getInstance().getRealm();
-        String _partiton = "Bio";
+
 
         EditText searchEditText = findViewById(R.id.editText_searchName);
         Button submit_button = findViewById(R.id.search_button);
@@ -43,50 +43,55 @@ public class ViewBioActivity extends AppCompatActivity {
         ageTextView =  findViewById(R.id.setAge_textView);
         genderTextView= findViewById(R.id.setGender_textView);
 
-        Credentials credentials = Credentials.anonymous();
-        app.loginAsync(credentials, it -> {
+        cmr = new ConnectMongoRealm();
+        String _partition = "Bio";
+        User user = RealmSingleton.getInstance().getRealm().currentUser();
 
-            if (it.isSuccess()) {
-                Log.w("MongoDB Auth", "Success");
-                user = RealmSingleton.getInstance().getRealm().currentUser();
-                try {
-                    SyncConfiguration config = new SyncConfiguration.Builder(user, _partiton)
-                            .allowQueriesOnUiThread(true)
-                            .allowWritesOnUiThread(true)
-                            .build();
-
-                    Realm.getInstanceAsync(config, new Realm.Callback() {
-                        @Override
-                        public void onSuccess(Realm realm) {
-                            Log.w("MongoDB Realm", "Successfully opened a realm");
-                        /*
-                        RealmQuery<BioInfo> queryResults = realm.where(BioInfo.class);
-                        Log.w("MongoDB Realm", String.valueOf(queryResults.contains("name",searchName)));
-                        */
-                            queryResults = realm.where(BioInfo.class).findAll();
-                        }
-                    });
-                } catch (Exception e) {
-                    Log.e("Exception", e.toString());
+        /*
+             SyncConfiguration config = new SyncConfiguration.Builder(user, partitionKey)
+                    .allowQueriesOnUiThread(true)
+                    .allowWritesOnUiThread(true)
+                    .build();
+            Realm.getInstanceAsync(config, new Realm.Callback() {
+                @Override
+                public void onSuccess(Realm realm) {
+                    Log.w("MongoDB Realm", "Successfully opened a realm");
+                    RealmQuery<BioInfo> tasksQuery = realm.where(BioInfo.class);
+                    queryResultsArrayList = new ArrayList<>(tasksQuery.findAll());
+                    for(int i = 0; i< queryResultsArrayList.size();i++) {
+                        Log.w("MongoDB Query "+ i , queryResultsArrayList.get(i).getName());
+                    }
                 }
-            } else {
-                Log.e("MongoDB Auth", it.getError().toString());
-                Toast.makeText(getApplicationContext(), "Error while connecting with Realm", Toast.LENGTH_LONG).show();
-            }
-        });
+            });
+             */
 
+        if(user != null){
+            realm = cmr.establishRealm(user, _partition);
+            realm.executeTransaction(transactionRealm -> {
+                Log.v("MongoDB Realm", "Successfully opened a realm");
+                //BioInfo info =  realm.where(BioInfo.class).equalTo("name","Anand").findFirst();
+                RealmQuery<BioInfo> tasksQuery = transactionRealm.where(BioInfo.class);
+                queryResultsArrayList = new ArrayList<>(tasksQuery.findAll());
+                for(int i = 0; i< queryResultsArrayList.size();i++) {
+                    Log.w("MongoDB Query "+ i , queryResultsArrayList.get(i).getName());
+                }
+            });
+        } else{
+            Intent intent = new Intent(this,MainActivity.class);
+            startActivity(intent);
+        }
 
         submit_button.setOnClickListener(new View.OnClickListener() {
             String name, age, gender;
             public void onClick(View v) {
                 String searchName = searchEditText.getText().toString().toLowerCase();
-                Log.w("MongoDB Query------->",searchName);
-                for (int i = 0; i < queryResults.size(); i++) {
-                    String queryName = queryResults.get(i).getName().toLowerCase();
+
+                for (int i = 0; i < queryResultsArrayList.size(); i++) {
+                    String queryName = queryResultsArrayList.get(i).getName().toLowerCase();
                     if( queryName.equals(searchName)){
-                        name = queryResults.get(i).getName();
-                        age = queryResults.get(i).getAge();
-                        gender = queryResults.get(i).getGender();
+                        name = queryResultsArrayList.get(i).getName();
+                        age = queryResultsArrayList.get(i).getAge();
+                        gender = queryResultsArrayList.get(i).getGender();
                     }else{
                         //Toast.makeText(getApplicationContext(),"Name does not exist",Toast.LENGTH_SHORT).show();
                     }
@@ -99,11 +104,15 @@ public class ViewBioActivity extends AppCompatActivity {
             }
         });
 
-        backButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), DashboardActivity.class);
-                startActivity(intent);
-            }
+        backButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getApplicationContext(), DashboardActivity.class);
+            startActivity(intent);
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cmr.closeRealm();
     }
 }

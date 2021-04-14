@@ -9,9 +9,9 @@ import android.content.Context;
         import java.util.ArrayList;
 public class CustomAdapter extends BaseAdapter {
     private Context context;
-    private ArrayList<CustomBodyMeasurementModel> arrayList;
+    private ArrayList<BodyMeasurement> arrayList;
     private TextView timestamp, Gewicht_Kg, Größe_cm;
-    public CustomAdapter(Context context, ArrayList<CustomBodyMeasurementModel> arrayList) {
+    public CustomAdapter(Context context, ArrayList<BodyMeasurement> arrayList) {
         this.context = context;
         this.arrayList = arrayList;
     }

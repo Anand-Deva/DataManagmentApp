@@ -22,19 +22,23 @@ import io.realm.mongodb.User;
 import io.realm.mongodb.sync.SyncConfiguration;
 
 public class InsertBodyMeasurementActivity extends AppCompatActivity {
-    App app;
-    User user;
+    Realm realm;
+    ConnectMongoRealm cmr;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_insert_body_measurment);
 
-        app = RealmSingleton.getInstance().getRealm();
-        String _partiton = "Body Measurement";
-
         EditText weightEditText = findViewById(R.id.editText_weight);
         EditText heightEditText = findViewById(R.id.editText_height);
         Button insertButton = findViewById(R.id.insert_button);
+
+        cmr = new ConnectMongoRealm();
+        String _partition = "Body Measurement";
+        User user = RealmSingleton.getInstance().getRealm().currentUser();
+
+
 
         insertButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -45,6 +49,8 @@ public class InsertBodyMeasurementActivity extends AppCompatActivity {
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String timeStamp = simpleDateFormat.format(new Date());
 
+                /*
+                app = RealmSingleton.getInstance().getRealm();
                 Credentials credentials = Credentials.anonymous();
                 app.loginAsync(credentials, it -> {
 
@@ -80,7 +86,36 @@ public class InsertBodyMeasurementActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "Error while connecting with Realm", Toast.LENGTH_LONG).show();
                     }
                 });
+ */
+
+                if(user != null){
+                    realm = cmr.establishRealm(user, _partition);
+                    realm.executeTransaction(transactionRealm -> {
+                        Log.v("MongoDB Realm", "Successfully opened a realm");
+                        // Instantiate the class using the factory function.
+                        BodyMeasurement bm = transactionRealm.createObject(BodyMeasurement.class, new ObjectId() );
+                        // Configure the instance.
+                        bm.setGewicht_Kg(weight);
+                        bm.setGröße_cm(height);
+                        bm.setTimestamp(timeStamp);
+                        bm.set_partitionKey(_partition);
+                        Log.w("MongoDB", "Document inserted successfully");
+                    });
+                    weightEditText.setText("");
+                    heightEditText.setText("");
+                    Intent intent1 = new Intent(getApplicationContext(), DashboardActivity.class);
+                    startActivity(intent1);
+                } else {
+                    Intent intent1 = new Intent(getApplicationContext(), MainActivity.class);
+                    startActivity(intent1);
+                }
             }
         });
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        cmr.closeRealm();
     }
 }
