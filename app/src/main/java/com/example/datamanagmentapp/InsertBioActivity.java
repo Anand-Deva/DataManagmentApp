@@ -44,7 +44,7 @@ public class InsertBioActivity extends AppCompatActivity {
 
 
 
-        cmr = new ConnectMongoRealm();
+        //cmr = new ConnectMongoRealm();
         String _partition = "Bio";
         User user = RealmSingleton.getInstance().getRealm().currentUser();
 
@@ -64,26 +64,6 @@ public class InsertBioActivity extends AppCompatActivity {
                     if (it.isSuccess()) {
                         Log.w("MongoDB Auth", "Success");
                         user = RealmSingleton.getInstance().getRealm().currentUser();
-                        SyncConfiguration config = new SyncConfiguration.Builder(user, _partiton)
-                                .allowQueriesOnUiThread(true)
-                                .allowWritesOnUiThread(true)
-                                .build();
-
-                        Realm.getInstanceAsync(config, new Realm.Callback() {
-                            @Override
-                            public void onSuccess(Realm realm) {
-                                realm.executeTransaction(r -> {
-                                    // Instantiate the class using the factory function.
-                                    BioInfo bi = r.createObject(BioInfo.class, new ObjectId() );
-                                    // Configure the instance.
-                                    bi.setName(name);
-                                    bi.setAge(age);
-                                    bi.setGender(gender);
-                                    bi.set_partitionKey(_partiton);
-                                    Log.w("MongoDB", "Document inserted successfully");
-                                });
-                            }
-                        });
 
 
                         nameEditTest.setText("");
@@ -98,6 +78,7 @@ public class InsertBioActivity extends AppCompatActivity {
                 */
 
                 if(user != null){
+                    /*
                     realm = cmr.establishRealm(user, _partition);
                     realm.executeTransaction(transactionRealm -> {
                         Log.v("MongoDB Realm", "Successfully opened a realm");
@@ -110,6 +91,28 @@ public class InsertBioActivity extends AppCompatActivity {
                         bi.set_partitionKey(_partition);
                         Log.w("MongoDB", "Document inserted successfully");
                     });
+                     */
+                    SyncConfiguration config = new SyncConfiguration.Builder(user, _partition)
+                            .allowQueriesOnUiThread(true)
+                            .allowWritesOnUiThread(true)
+                            .build();
+
+                    Realm.getInstanceAsync(config, new Realm.Callback() {
+                        @Override
+                        public void onSuccess(Realm realm) {
+                            realm.executeTransaction(r -> {
+                                // Instantiate the class using the factory function.
+                                BioInfo bi = r.createObject(BioInfo.class, new ObjectId());
+                                // Configure the instance.
+                                bi.setName(name);
+                                bi.setAge(age);
+                                bi.setGender(gender);
+                                bi.set_partitionKey(_partition);
+                                Log.w("MongoDB", "Document inserted successfully");
+                            });
+                            realm.close();
+                        }
+                    });
                     nameEditTest.setText("");
                     ageEditText.setText("");
                     Intent intent1 = new Intent(getApplicationContext(), DashboardActivity.class);
@@ -120,11 +123,5 @@ public class InsertBioActivity extends AppCompatActivity {
                 }
             }
         });
-    }
-
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
-        cmr.closeRealm();
     }
 }

@@ -36,7 +36,7 @@ public class ViewIdentityActivity extends AppCompatActivity {
         displayView = findViewById(R.id.display_textView);
         backButton = findViewById(R.id.back_button);
 
-        cmr = new ConnectMongoRealm();
+        //cmr = new ConnectMongoRealm();
         String _partition = "ids";
         User user = RealmSingleton.getInstance().getRealm().currentUser();
 
@@ -49,35 +49,7 @@ public class ViewIdentityActivity extends AppCompatActivity {
                 Log.w("MongoDB Auth", "Success");
                 user = RealmSingleton.getInstance().getRealm().currentUser();
                 try {
-                    SyncConfiguration config = new SyncConfiguration.Builder(user, _partiton)
-                            .allowQueriesOnUiThread(true)
-                            .allowWritesOnUiThread(true)
-                            .build();
-                    Realm.getInstanceAsync(config, new Realm.Callback() {
-                        @Override
-                        public void onSuccess(Realm realm) {
 
-                            Log.w("MongoDB Realm", "Successfully opened a realm");
-                            // RealmQuery<PatientIdCollection> queryResults =  realm.where(PatientIdCollection.class);
-                            // Log.i("MongoDB Query", queryResults.findAll().asJSON());
-
-                            RealmResults<PatientIdCollection> results = realm.where(PatientIdCollection.class).findAll();
-                            ArrayList<String> idsArrayList = new ArrayList<String>();
-
-                            Log.w("MongoDB Query------->", String.valueOf(results.size()));
-
-                            for (int i = 0; i < results.size(); i++) {
-                                Log.w("MongoDB Query------->", results.get(i).getuId());
-                                idsArrayList.add(results.get(i).getuId());
-                            }
-
-                            String listString = "";
-                            for (String s : idsArrayList) {
-                                listString += s + " ";
-                            }
-                            displayView.setText(listString);
-                        }
-                    });
                 }catch (Exception e){
                     Log.e("Exception", e.toString());
                 }
@@ -89,8 +61,11 @@ public class ViewIdentityActivity extends AppCompatActivity {
         */
 
         if(user != null){
+
+            /*
             realm = cmr.establishRealm(user, _partition);
             realm.executeTransaction(transactionRealm -> {
+
                 Log.v("MongoDB Realm", "Successfully opened a realm");
                 RealmQuery<PatientIdCollection> tasksQuery = transactionRealm.where(PatientIdCollection.class);
                 ArrayList<PatientIdCollection> queryResultsArrayList = new ArrayList<>(tasksQuery.findAll());
@@ -103,6 +78,37 @@ public class ViewIdentityActivity extends AppCompatActivity {
                     listString += s + " ";
                 }
                 displayView.setText(listString);
+            });
+             */
+
+            SyncConfiguration config = new SyncConfiguration.Builder(user, _partition)
+                    .allowQueriesOnUiThread(true)
+                    .allowWritesOnUiThread(true)
+                    .build();
+            Realm.getInstanceAsync(config, new Realm.Callback() {
+                @Override
+                public void onSuccess(Realm realm) {
+                    Log.w("MongoDB Realm", "Successfully opened a realm");
+                    // RealmQuery<PatientIdCollection> queryResults =  realm.where(PatientIdCollection.class);
+                    // ArrayList<PatientIdCollection> queryResultsArrayList = new ArrayList<>(tasksQuery.findAll());
+
+                    RealmResults<PatientIdCollection> queryResults = realm.where(PatientIdCollection.class).findAll();
+                    ArrayList<String> idArrayList = new ArrayList<String>();
+
+                    Log.w("MongoDB Query------->", String.valueOf(queryResults.size()));
+
+                    for (int i = 0; i < queryResults.size(); i++) {
+                        Log.w("MongoDB Query------->", queryResults.get(i).getuId());
+                        idArrayList.add(queryResults.get(i).getuId());
+                    }
+
+                    String listString = "";
+                    for (String s : idArrayList) {
+                        listString += s + " ";
+                    }
+                    displayView.setText(listString);
+                    realm.close();
+                }
             });
         } else{
             Intent intent = new Intent(this,MainActivity.class);
@@ -117,15 +123,6 @@ public class ViewIdentityActivity extends AppCompatActivity {
             }
         });
     }
-
-
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
-        cmr.closeRealm();
-
-    }
-
 
     @Override
     public void onBackPressed() {}

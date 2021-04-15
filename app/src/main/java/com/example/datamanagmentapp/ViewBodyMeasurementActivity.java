@@ -33,7 +33,7 @@ import io.realm.mongodb.sync.SyncConfiguration;
 public class ViewBodyMeasurementActivity extends AppCompatActivity {
     ListView listView;
 
-    Realm realm;
+    Realm realmObj;
     ConnectMongoRealm cmr;
     ArrayList<BodyMeasurement> queryResultsArrayList;
 
@@ -50,9 +50,10 @@ public class ViewBodyMeasurementActivity extends AppCompatActivity {
         listView = findViewById(R.id.listView);
 
 
-        cmr = new ConnectMongoRealm();
+        //cmr = new ConnectMongoRealm();
         User user = RealmSingleton.getInstance().getRealm().currentUser();
         String _partition =  "Body Measurement";
+
 /*
         app = RealmSingleton.getInstance().getRealm();
         Credentials credentials = Credentials.anonymous();
@@ -62,20 +63,7 @@ public class ViewBodyMeasurementActivity extends AppCompatActivity {
                 Log.w("MongoDB Auth", "Success");
                 user = RealmSingleton.getInstance().getRealm().currentUser();
                 try {
-                    SyncConfiguration config = new SyncConfiguration.Builder(user, _partiton)
-                            .allowQueriesOnUiThread(true)
-                            .allowWritesOnUiThread(true)
-                            .build();
 
-                    Realm.getInstanceAsync(config, new Realm.Callback() {
-                        @Override
-                        public void onSuccess(Realm realm) {
-                            Log.w("MongoDB Realm", "Successfully opened a realm");
-
-                            queryResults = realm.where(BodyMeasurement.class).findAll();
-
-                        }
-                    });
                 } catch (Exception e) {
                     Log.e("Exception", e.toString());
                 }
@@ -86,11 +74,29 @@ public class ViewBodyMeasurementActivity extends AppCompatActivity {
         });
  */
         if(user != null){
+
+            /*
             realm = cmr.establishRealm(user, _partition);
             realm.executeTransaction(transactionRealm -> {
                 Log.v("MongoDB Realm", "Successfully opened a realm");
                 RealmQuery<BodyMeasurement> tasksQuery = transactionRealm.where(BodyMeasurement.class);
                 queryResultsArrayList = new ArrayList<>(tasksQuery.findAll());
+            });
+             */
+
+            SyncConfiguration config = new SyncConfiguration.Builder(user, _partition)
+                    .allowQueriesOnUiThread(true)
+                    .allowWritesOnUiThread(true)
+                    .build();
+
+            Realm.getInstanceAsync(config, new Realm.Callback() {
+                @Override
+                public void onSuccess(Realm realm) {
+                    Log.w("MongoDB Realm", "Successfully opened a realm");
+                    RealmQuery<BodyMeasurement> tasksQuery = realm.where(BodyMeasurement.class);
+                    queryResultsArrayList = new ArrayList<>(tasksQuery.findAll());
+                    realmObj = realm;
+                }
             });
         } else{
             Intent intent = new Intent(this,MainActivity.class);
@@ -122,14 +128,8 @@ public class ViewBodyMeasurementActivity extends AppCompatActivity {
                 Log.d("arrayList of values",resultArrayList.toString());
                 customAdapter = new CustomAdapter(getApplicationContext(),resultArrayList);
                 listView.setAdapter(customAdapter);
+                realmObj.close();
             }
         });
-    }
-
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
-        cmr.closeRealm();
-
     }
 }

@@ -34,7 +34,7 @@ public class InsertBodyMeasurementActivity extends AppCompatActivity {
         EditText heightEditText = findViewById(R.id.editText_height);
         Button insertButton = findViewById(R.id.insert_button);
 
-        cmr = new ConnectMongoRealm();
+        //cmr = new ConnectMongoRealm();
         String _partition = "Body Measurement";
         User user = RealmSingleton.getInstance().getRealm().currentUser();
 
@@ -57,26 +57,7 @@ public class InsertBodyMeasurementActivity extends AppCompatActivity {
                     if (it.isSuccess()) {
                         Log.w("MongoDB Auth", "Success");
                         user = RealmSingleton.getInstance().getRealm().currentUser();
-                        SyncConfiguration config = new SyncConfiguration.Builder(user, _partiton)
-                                .allowQueriesOnUiThread(true)
-                                .allowWritesOnUiThread(true)
-                                .build();
 
-                        Realm.getInstanceAsync(config, new Realm.Callback() {
-                            @Override
-                            public void onSuccess(Realm realm) {
-                                realm.executeTransaction(r -> {
-                                    // Instantiate the class using the factory function.
-                                    BodyMeasurement bm = r.createObject(BodyMeasurement.class, new ObjectId() );
-                                    // Configure the instance.
-                                    bm.setGewicht_Kg(weight);
-                                    bm.setGröße_cm(height);
-                                    bm.setTimestamp(timeStamp);
-                                    bm.set_partitionKey(_partiton);
-                                    Log.w("MongoDB", "Document inserted successfully");
-                                });
-                            }
-                        });
                         weightEditText.setText("");
                         heightEditText.setText("");
                         Intent intent1 = new Intent(getApplicationContext(), DashboardActivity.class);
@@ -89,6 +70,7 @@ public class InsertBodyMeasurementActivity extends AppCompatActivity {
  */
 
                 if(user != null){
+                    /*
                     realm = cmr.establishRealm(user, _partition);
                     realm.executeTransaction(transactionRealm -> {
                         Log.v("MongoDB Realm", "Successfully opened a realm");
@@ -101,6 +83,29 @@ public class InsertBodyMeasurementActivity extends AppCompatActivity {
                         bm.set_partitionKey(_partition);
                         Log.w("MongoDB", "Document inserted successfully");
                     });
+                     */
+
+                    SyncConfiguration config = new SyncConfiguration.Builder(user, _partition)
+                            .allowQueriesOnUiThread(true)
+                            .allowWritesOnUiThread(true)
+                            .build();
+
+                    Realm.getInstanceAsync(config, new Realm.Callback() {
+                        @Override
+                        public void onSuccess(Realm realm) {
+                            realm.executeTransaction(r -> {
+                                // Instantiate the class using the factory function.
+                                BodyMeasurement bm = r.createObject(BodyMeasurement.class, new ObjectId() );
+                                // Configure the instance.
+                                bm.setGewicht_Kg(weight);
+                                bm.setGröße_cm(height);
+                                bm.setTimestamp(timeStamp);
+                                bm.set_partitionKey(_partition);
+                                Log.w("MongoDB", "Document inserted successfully");
+                            });
+                            realm.close();
+                        }
+                    });
                     weightEditText.setText("");
                     heightEditText.setText("");
                     Intent intent1 = new Intent(getApplicationContext(), DashboardActivity.class);
@@ -111,11 +116,5 @@ public class InsertBodyMeasurementActivity extends AppCompatActivity {
                 }
             }
         });
-    }
-
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
-        cmr.closeRealm();
     }
 }
