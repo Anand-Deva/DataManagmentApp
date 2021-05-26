@@ -2,6 +2,7 @@ package com.example.datamanagmentapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -33,8 +34,21 @@ public class DashboardActivity extends AppCompatActivity {
 
         BodyMeasurmentButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+
+
                 Intent intent1 = new Intent(getApplicationContext(), BodyMeasurmentActivity.class);
                 startActivity(intent1);
+                
+
+                /*
+
+                Intent intent = new Intent().setClassName("com.example.testapp01",
+                                                            "com.example.testapp01.SecondActivity");
+                intent.putExtra("EXTRA_INTENT_INFO", "xyz001");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+
+                 */
             }
         });
     }

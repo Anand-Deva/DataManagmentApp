@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                      startActivity(intent);
                 } else {
                     Log.e("MongoDB Auth", it.getError().toString());
-                    Toast.makeText(getApplicationContext(),"Invalid username or password",Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(),"Error while connecting to MongoDB",Toast.LENGTH_LONG).show();
                 }
             });
         });
